@@ -395,6 +395,9 @@ class Tabletop_Sim:
 
     def load_materials(self):
         object_conf = read_json(OBJECT_OBJ_MAT_CONF)
+        if not self.indivisual_loading:
+            self.object_conf = object_conf
+            return
         for ele in object_conf:
             if object_conf[ele] is not None:
                 for obj in object_conf[ele]:
@@ -953,6 +956,19 @@ class Tabletop_Sim:
         
         # self.grid[position[0]:position[0]+size[1], 
         #         position[1]: position[1]+size[0]] = 1
+        if self.indivisual_loading:
+            for ele in self.object_conf:
+                if self.object_conf[ele] is not None:
+                    if mesh_name in self.object_conf[ele]:
+                        obj = mesh_name
+                        mesh_path = self.object_conf[ele][obj]["meshes"]
+                        texture_path = self.object_conf[ele][obj]["texture"]
+                        self.texture_name[obj] = self.object_conf[ele][obj]["name"]
+                        print("loading {}".format(self.object_conf[ele][obj]["name"]))
+                        self.mesh_type[obj] = ele
+                        nvisii.mesh.create_from_file(obj, mesh_path)
+                        if texture_path is not None:
+                            nvisii.texture.create_from_file(obj, texture_path)
         if name is not None:
             self.obj_position.update({
                 name: position
@@ -965,7 +981,10 @@ class Tabletop_Sim:
         baseOrientation = getQuaternionFromMatrix(matrix_orn_2 * matrix_orn)
         xyz = [(position[1] + size[0])/40 -0.4, 
                 (position[0] + size[1])/40 - 0.4]
-        basePosition = [xyz[0], xyz[1], 1.15]
+        if len(position == 3):
+            basePosition = [xyz[0], xyz[1], 1.15 + position[2]*0.1]
+        else: 
+            basePosition = [xyz[0], xyz[1], 1.15]
         pos = basePosition
         rot = baseOrientation
         scale = scale_factor
@@ -1455,7 +1474,11 @@ class Tabletop_Sim:
         pre_position = self.obj_position[name]
         xyz = [(position[1] + size[0])/40 -0.4, 
                 (position[0] + size[1])/40 - 0.4]
-        basePosition = [xyz[0], xyz[1], 1.15]
+        if len(position) == 3:
+            basePosition = [xyz[0], xyz[1], 1.15 + position[2]*0.1]
+        else:
+            basePosition = [xyz[0], xyz[1], 1.15]
+
         self.grid[pre_position[0]:pre_position[0]+size[1],
             pre_position[1]: pre_position[1]+size[0]] = 0
         baseOrientationQuat = pb.getQuaternionFromEuler([0, 0, baseOrientationAngle/180 * np.pi])

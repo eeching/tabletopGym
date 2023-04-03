@@ -73,8 +73,8 @@ def single_random_walk(episode="single", with_napkin=True):
     )
 
     sim = init_config(sim, object_list)
-    sim.get_observation_nvisii(f"{base_path}/0")
-    sim.get_observation_nvisii_cliport(f"{base_path}/0/clip/")
+    sim.get_observation_nvisii(f"{base_path}/0.png")
+    # sim.get_observation_nvisii_cliport(f"{base_path}/0/clip/")
 
     random.shuffle(object_list)
 
@@ -89,7 +89,6 @@ def single_random_walk(episode="single", with_napkin=True):
         
         sim.get_observation_nvisii(f"{base_path}/{t+1}")
         sim.get_observation_nvisii_cliport(f"{base_path}/{t+1}/clip/")
-
 
 
 def batch_tidy_config(episode="batch_init", render=True, with_napkin=False):
@@ -204,7 +203,7 @@ def init_config(sim, object_list):
     return sim
 
 # get_single_tidy_config()
-# single_random_walk()
+single_random_walk()
 # batch_tidy_config(render=False, with_napkin=True)
-batch_random_walk(with_napkin=True)
+# batch_random_walk(with_napkin=True)
 

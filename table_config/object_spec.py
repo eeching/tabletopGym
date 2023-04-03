@@ -70,16 +70,19 @@ def visualize_all():
     pdb.set_trace()
     return object_list    
 
-def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stick_to_left=True):
+def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stick_to_left=True, num_napkin=0):
 
     grid = np.zeros((32, 32), dtype=int)
     # num_napkin_list = [0, 1, 2, 3]
 
-    type_list = ["cup1", "cup2", "fork1"]
+    type_list = ["cup1", "cup2", "fork1", "napkin", "plate1"]
     cluster_size = {}
 
     cluster_size["cup1"] = (int(np.sqrt(num_cup1))*3, int(np.sqrt(num_cup1))*3)
     cluster_size["fork1"] = (num_uten, 8)
+    cluster_size["napkin"] = (num_napkin*2, 4)
+    cluster_size["plate1"] = (4, 4)
+    num_plate = 0
     if horizontal:
         cluster_size["cup2"] = (min(num_cup2, 5)*3, math.ceil(num_cup2/5)*3)        
     else: 
@@ -107,7 +110,7 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 right_start_idx = (32, y1)
             else:
                 right_start_idx = (x0, 0)
-        else:
+        elif idx == 2:
             if stick_to_left:
                 x0, y0 = left_start_idx
                 x1, y1 = x0 + cluster_size[obj][0], y0 + cluster_size[obj][1]
@@ -115,10 +118,19 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 _x, _y = cluster_size[obj]
                 x0, y0 = right_start_idx[0] - _x, right_start_idx[1]
                 x1, y1 = right_start_idx[0], _y + right_start_idx[1]
+        elif idx == 3: 
+            if stick_to_left:
+                _x, _y = cluster_size[obj]
+                x0, y0 = right_start_idx[0] - _x, right_start_idx[1]
+                x1, y1 = right_start_idx[0], _y + right_start_idx[1]
+            else:
+                x0, y0 = left_start_idx
+                x1, y1 = x0 + cluster_size[obj][0], y0 + cluster_size[obj][1]
+            
         
         obj_cluster_pos[obj] = (x0, y0, x1, y1) 
 
-    type_list = ["cup1", "cup2", "fork1"]
+    type_list = ["cup1", "cup2", "fork1", "napkin", "plate1"]
 
     obj_list = []
     for _type in type_list:
@@ -152,35 +164,58 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 x, y = x_0 + i, y_0
                 angle = 0
                 grid[x:x+1, y:y+8] = len(obj_list)
-                # if horizontal:
-                #     x, y = x_0 + i, y_0
-                #     angle = 0
-                #     grid[x:x+1, y:y+10] = len(obj_list)
-                # else:
-                #     x, y = x_0, y_0 + i*4
-                #     angle = 90
-                #     grid[x:x+10, y:y+4] = len(obj_list)
                 o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y), "shape": (1, 8), "angle": angle}
                 obj_list.append(o)
+        elif _type == "napkin":
+            color = colors["white"]
+            x_0, y_0, x_1, y_1 = obj_cluster_pos[_type]
+            for i in range(num_napkin):
+                x, y = x_0 + i*2, y_0
+                angle = 0
+                grid[x:x+3, y:y+4] = len(obj_list)
+                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y), "shape": (2, 4), "angle": angle}
+                obj_list.append(o)
+        elif _type == "plate1":
+            color = colors["white"]
+            x_0, y_0, x_1, y_1 = obj_cluster_pos[_type]
+            for i in range(num_plate):
+                x, y = x_0, y_0
+                angle = 0
+                grid[x:x+4, y:y+4] = len(obj_list)
+                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y), "shape": (4, 4), "angle": angle}
+                obj_list.append(o)
+
         else:
             print("No such object!")
 
     return obj_list, grid
 
-def batch_initialize_tidy_config():
+def batch_initialize_tidy_config(napkin=False):
 
-    num_cup1_list = [4, 9, 16]
-    num_cup2_list = np.arange(4, 15).tolist()
-    num_utensil_list = np.arange(4, 10).tolist()
     horizontal_list = [True, False]
     stick_to_left_list = [True, False]
-
     batch_tidy_config = []
+    if napkin:
+        num_cup1_list = [4, 9]
+        num_cup2_list = np.arange(4, 8).tolist()
+        num_utensil_list = np.arange(4, 8).tolist()
+        num_napkin_list = np.arange(3, 6).tolist()
+        cart_prod = itertools.product(num_cup1_list, num_cup2_list, num_utensil_list, num_napkin_list, horizontal_list, stick_to_left_list)
 
-    for element in itertools.product(num_cup1_list, num_cup2_list, num_utensil_list, horizontal_list, stick_to_left_list):
-        num_cup1, num_cup2, num_uten, horizontal, stick_to_left = element
-        obj_list, grid = get_tidy_config(num_cup1, num_cup2, num_uten, horizontal, stick_to_left)
-        batch_tidy_config.append((obj_list, grid.tolist(), element))
+        for element in cart_prod:
+            num_cup1, num_cup2, num_uten, num_napkin, horizontal, stick_to_left = element
+            obj_list, grid = get_tidy_config(num_cup1, num_cup2, num_uten, horizontal, stick_to_left, num_napkin)
+            batch_tidy_config.append((obj_list, grid.tolist(), element))
+    else:
+        num_cup1_list = [4, 9, 16]
+        num_cup2_list = np.arange(4, 15).tolist()
+        num_utensil_list = np.arange(4, 10).tolist()
+        cart_prod = itertools.product(num_cup1_list, num_cup2_list, num_utensil_list, horizontal_list, stick_to_left_list)
+
+        for element in cart_prod:
+            num_cup1, num_cup2, num_uten, horizontal, stick_to_left = element
+            obj_list, grid = get_tidy_config(num_cup1, num_cup2, num_uten, horizontal, stick_to_left)
+            batch_tidy_config.append((obj_list, grid.tolist(), element))
 
     return batch_tidy_config
 

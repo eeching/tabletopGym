@@ -1306,6 +1306,7 @@ class Tabletop_Sim:
         return np_img_arr[:, :, :3]
 
     def get_observation_nvisii_cliport(self, filename):
+        os.makedirs(filename, exist_ok=True)
         depth_pkl = ()
         intrinsics_list = []
         for ids in self.ids_pybullet_and_nvisii_names:
@@ -1405,12 +1406,13 @@ class Tabletop_Sim:
             # nvisii quat expects w as the first argument
             obj_entity.get_transform().set_rotation(rot)
         nvisii.set_camera_entity(self.camera_nvisii_list[0])
+        os.makedirs(filename, exist_ok=True)
         
         nvisii.render_to_file(
             width=640, 
             height=640, 
             samples_per_pixel=64,
-            file_path=filename
+            file_path=filename + "/image.png"
         ) 
         mask = nvisii.render_data(
             width=640,
@@ -1419,11 +1421,14 @@ class Tabletop_Sim:
             frame_count=1,
             bounce=int(0),
             options="entity_id",
-            # file_path=filename+ "/mask.png"
+            #file_path=filename+ "/mask.png"
         )
         mask = np.array(mask).reshape(640, 640, 4)[:, :, 0]
         mask = np.flipud(mask)
         mask = np.uint8(mask)
+        with open(filename+ "/mask.npy", 'wb') as f:
+            np.save(f, mask)
+        
         # print('min',np.min(mask))
         # print('max',np.max(mask))
         return mask

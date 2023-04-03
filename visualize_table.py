@@ -73,8 +73,8 @@ def single_random_walk(episode="single", with_napkin=True):
     )
 
     sim = init_config(sim, object_list)
-    sim.get_observation_nvisii(f"{base_path}/0.png")
-    # sim.get_observation_nvisii_cliport(f"{base_path}/0/clip/")
+    sim.get_observation_nvisii(f"{base_path}/0")
+    sim.get_observation_nvisii_cliport(f"{base_path}/0/clip/")
 
     random.shuffle(object_list)
 

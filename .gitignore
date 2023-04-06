@@ -135,3 +135,6 @@ data
 exps
 ycb
 write_ycb.py
+
+table_env/
+core/

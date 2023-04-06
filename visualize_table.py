@@ -10,17 +10,23 @@ import random
 
 def get_single_tidy_config(episode="single", with_napkin=False):
 
-    base_path = f"./exps/{episode}"
+    base_path = f"./exps/{episode}/tidy_config_demo"
     os.makedirs(base_path, exist_ok = True)
     obs_counter = 0
 
     if with_napkin:
-        num_napkin = 5
+        num_napkin = 3
 
-    object_list, grid = object_spec.get_tidy_config(num_cup1=0, num_cup2=6, num_uten=8, horizontal=True, stick_to_left=True, num_napkin=num_napkin)
-    np.savetxt(f'{base_path}/grid.out', grid)
-                        
-    pdb.set_trace()
+    object_list, grid = object_spec.get_tidy_config(num_cup1=9, num_cup2=10, num_uten=9, horizontal=True, stick_to_left=True, num_napkin=num_napkin)
+
+    with open(f'{base_path}/grid.out', 'w') as outfile:
+        for i in range(grid.shape[2]):
+            np.savetxt(outfile, grid[:,:,i], fmt='%i')
+
+    with open(f'{base_path}/object.json', "w") as fp:
+        json.dump(object_list, fp) 
+                       
+    # pdb.set_trace()
     num_objs = len(object_list)
 
     sim = Tabletop_Sim(
@@ -35,8 +41,8 @@ def get_single_tidy_config(episode="single", with_napkin=False):
         obj_name = obj["name"]
         obj_type = obj["type"]
 
-        if obj["color"] is None:
-            pdb.set_trace()
+        # if obj["color"] is None:
+        #     pdb.set_trace()
 
         yes = sim.load_object(
             name = obj_name,
@@ -53,17 +59,17 @@ def get_single_tidy_config(episode="single", with_napkin=False):
         )
         if yes is False:
             print(f"Collison caused by obj {obj_name}!")
-            pdb.set_trace()
+            # pdb.set_trace()
         else:
             sim.get_observation_nvisii(f"{base_path}/{obs_counter}")
             sim.get_observation_nvisii_cliport(f"{base_path}/{obs_counter}/clip/")
             obs_counter += 1
 
-def single_random_walk(episode="single", with_napkin=True):
+def single_random_walk(episode="single", with_napkin=True, on_napkin=True):
     
-    num_cup1, num_cup2, num_uten, num_napkin, horizontal, stick_to_left  = 9, 6, 8, 5, True, True
-    object_list, grid = object_spec.get_tidy_config(num_cup1=num_cup1, num_cup2=num_cup2, num_uten=num_uten, horizontal=horizontal, stick_to_left=stick_to_left, num_napkin=num_napkin)
-    base_path = f"./exps/{episode}/with_napkin_{with_napkin}/cup1_{num_cup1}_cup2_{num_cup2}_fork_{num_uten}_napkin_{num_napkin}_hori_{horizontal}_left_{stick_to_left}"
+    num_cup1, num_cup2, num_uten, num_napkin, horizontal, stick_to_left = 9, 6, 5, 2, True, True
+    object_list, grid = object_spec.get_tidy_config(num_cup1=num_cup1, num_cup2=num_cup2, num_uten=num_uten, horizontal=horizontal, stick_to_left=stick_to_left, num_napkin=num_napkin, on_napkin=on_napkin)
+    base_path = f"./exps/{episode}/with_napkin_{with_napkin}/cup1_{num_cup1}_cup2_{num_cup2}_fork_{num_uten}_napkin_{num_napkin}_hori_{horizontal}_left_{stick_to_left}_on_napkin_{on_napkin}"
     os.makedirs(base_path, exist_ok = True)
 
     sim = Tabletop_Sim(
@@ -89,14 +95,24 @@ def single_random_walk(episode="single", with_napkin=True):
         
         sim.get_observation_nvisii(f"{base_path}/{t+1}")
         sim.get_observation_nvisii_cliport(f"{base_path}/{t+1}/clip/")
+        with open(f'{base_path}/{t+1}/grid.out', 'w') as outfile:
+            for i in range(grid.shape[2]):
+                np.savetxt(outfile, grid[:,:,i], fmt='%i')
 
 
-def batch_tidy_config(episode="batch_init", render=True, with_napkin=False):
-  
-    base_path = f"./exps/{episode}/with_napkin_{with_napkin}"
+
+def batch_tidy_config(episode="batch_init", render=True, with_napkin=False, on_napkin=False):
+    
+    
+    if with_napkin:
+        base_path = f"./exps/{episode}/with_napkin_{with_napkin}/on_napkin_{on_napkin}"
+    else:
+        base_path = f"./exps/{episode}/with_napkin_{with_napkin}"
+
     os.makedirs(base_path, exist_ok = True)
 
-    batch_tidy_config = object_spec.batch_initialize_tidy_config(napkin=with_napkin)
+    batch_tidy_config = object_spec.batch_initialize_tidy_config(napkin=with_napkin, on_napkin=on_napkin)
+
     with open(f'{base_path}/config.json', 'w') as fout:
         json.dump(batch_tidy_config, fout)
                         
@@ -120,23 +136,28 @@ def batch_tidy_config(episode="batch_init", render=True, with_napkin=False):
         if with_napkin:
             curr_path = f"{base_path}/cup1_{spec[0]}_cup2_{spec[1]}_fork_{spec[2]}_napkin_{spec[3]}_hori_{spec[4]}_left_{spec[5]}"
         else:
-            curr_path = f"{base_path}/cup1_{spec[0]}_cup2_{spec[1]}_fork_{spec[2]}_hori_{spec[3]}_left_{spec[4]}"
+            curr_path = f"{base_path}/cup1_{spec[0]}_cup2_{spec[1]}_fork_{spec[2]}_napkin_0_hori_{spec[3]}_left_{spec[4]}"
         sim.get_observation_nvisii(curr_path)
         sim.get_observation_nvisii_cliport(f"{curr_path}/clip/")
 
-def batch_random_walk(episode="batch_traj", with_napkin=False):
-    base_path = f"./exps/{episode}/with_napkin_{with_napkin}"
+def batch_random_walk(episode="batch_traj", with_napkin=False, on_napkin=False):
+
+    if with_napkin:
+        base_path = f"./exps/{episode}/with_napkin_{with_napkin}/on_napkin_{on_napkin}"
+        config_path = f'./exps/batch_init/with_napkin_{with_napkin}/on_napkin_{on_napkin}/config.json'
+    else:
+        base_path = f"./exps/{episode}/with_napkin_{with_napkin}"
+        config_path = f'./exps/batch_init/with_napkin_{with_napkin}/config.json'
     os.makedirs(base_path, exist_ok = True)
 
-    with open(f'./exps/batch_init//with_napkin_{with_napkin}/config.json', 'r') as f:
+    with open(config_path, 'r') as f:
         batch_tidy_config = json.load(f)
                         
     num_configs = len(batch_tidy_config)
     print(f"{num_configs} initial tidy configurations" )
-    batch_tidy_config_sub_idx = np.random.choice(len(batch_tidy_config), 5, replace=False)
-    pdb.set_trace()
+    batch_tidy_config_sub_idx = np.random.choice(len(batch_tidy_config), len(batch_tidy_config), replace=False)
+    # pdb.set_trace()
     
-
     sim = Tabletop_Sim(
             width=640,
             height=640,
@@ -150,7 +171,7 @@ def batch_random_walk(episode="batch_traj", with_napkin=False):
         if with_napkin:
             curr_path = f"{base_path}/cup1_{spec[0]}_cup2_{spec[1]}_fork_{spec[2]}_napkin_{spec[3]}_hori_{spec[4]}_left_{spec[5]}"
         else:
-            curr_path = f"{base_path}/cup1_{spec[0]}_cup2_{spec[1]}_fork_{spec[2]}_hori_{spec[3]}_left_{spec[4]}"
+            curr_path = f"{base_path}/cup1_{spec[0]}_cup2_{spec[1]}_fork_{spec[2]}_napkin_0_hori_{spec[3]}_left_{spec[4]}"
         os.makedirs(base_path, exist_ok = True)
 
         # initialize the tidy configuration
@@ -202,8 +223,14 @@ def init_config(sim, object_list):
             print(f"Collison!")
     return sim
 
-# get_single_tidy_config()
-single_random_walk()
-# batch_tidy_config(render=False, with_napkin=True)
-# batch_random_walk(with_napkin=True)
+# get_single_tidy_config(with_napkin=True)
+# single_random_walk(with_napkin=True, on_napkin=False)
+episode = "linfeng-wo-napkin"
+# batch_tidy_config(episode="batch_init", render=True, with_napkin=False, on_napkin=False)
+# batch_random_walk(episode=episode, with_napkin=False)
+# batch_random_walk(episode=episode, with_napkin=True, on_napkin=False)
+batch_random_walk(episode=episode, with_napkin=True, on_napkin=True)
+
+
+
 

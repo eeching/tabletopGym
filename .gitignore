@@ -26,6 +26,9 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+exps/
+learn/*.json
+core/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -128,3 +131,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 # tabletop_gym/envs/data/
+data
+exps
+ycb
+write_ycb.py
+
+table_env/
+core/

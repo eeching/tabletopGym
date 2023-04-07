@@ -152,7 +152,7 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
 
     type_list = ["cup1", "cup2", "napkin", "fork1"]
 
-    obj_list = []
+    obj_list = {}
     for _type in type_list:
         if _type == "cup1":
             color_list = np.random.choice(list(colors.keys()), num_cup1)
@@ -162,8 +162,8 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 color = colors[color_list[i]]
                 x, y = x_0 + i%k*4, y_0 + i//k*4
                 angle = 0
-                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y, 0), "shape": (4, 4), "angle": angle}
-                obj_list.append(o)
+                o = {"type": _type, "id": len(obj_list)+1, "color": color, "pos": (x, y, 0), "shape": (4, 4, 2), "angle": angle}
+                obj_list[len(obj_list)+1] = o
                 grid[x:x+4, y:y+4, :] = len(obj_list)
         elif _type == "cup2": 
             color = colors["white"]
@@ -174,8 +174,8 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 else:
                     x, y = x_0 + i//5*3, y_0 + i%5*3
                 angle = 0
-                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y, 0), "shape": (3, 3), "angle": angle}
-                obj_list.append(o)
+                o = {"type": _type, "id": len(obj_list)+1, "color": color, "pos": (x, y, 0), "shape": (3, 3, 2), "angle": angle}
+                obj_list[len(obj_list)+1] = o
                 grid[x:x+3, y:y+3, :] = len(obj_list)
         elif _type == "fork1":
             color = colors["silver"]
@@ -190,8 +190,8 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 x, y = x_0 + i, y_0
                 angle = 0
                 grid[x:x+1, y:y+8, z] = len(obj_list)
-                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y, z*0.1), "shape": (1, 8), "angle": angle}
-                obj_list.append(o)
+                o = {"type": _type, "id": len(obj_list)+1, "color": color, "pos": (x, y, z*0.1), "shape": (1, 8, 1), "angle": angle}
+                obj_list[len(obj_list)+1] = o
         elif _type == "napkin":
             color = colors["white"]
             if on_napkin:
@@ -204,8 +204,8 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 x, y = x_0 + i*3, y_0
                 angle = 0
                 grid[x:x+3, y:y+8, 0] = len(obj_list)
-                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y, 0), "shape": (3, 8), "angle": angle}
-                obj_list.append(o)
+                o = {"type": _type, "id": len(obj_list)+1, "color": color, "pos": (x, y, 0), "shape": (3, 8, 1), "angle": angle}
+                obj_list[len(obj_list)+1] = o
         elif _type == "plate1":
             color = colors["white"]
             x_0, y_0, x_1, y_1 = obj_cluster_pos[_type]
@@ -213,8 +213,8 @@ def get_tidy_config(num_cup1=25, num_cup2=10, num_uten=12, horizontal=True, stic
                 x, y = x_0, y_0
                 angle = 0
                 grid[x:x+4, y:y+4].append(len(obj_list))
-                o = {"type": _type, "name": len(obj_list), "color": color, "pos": (x, y, 0), "shape": (4, 4), "angle": angle}
-                obj_list.append(o)
+                o = {"type": _type, "id": len(obj_list), "color": color, "pos": (x, y, 0), "shape": (4, 4, 1), "angle": angle}
+                obj_list[len(obj_list)+1] = o
 
         else:
             print("No such object!")
@@ -254,36 +254,21 @@ def batch_initialize_tidy_config(napkin=False, on_napkin=False):
 
     return batch_tidy_config
 
-
 def random_walk_one_step(obj, grid):
-    w, h = obj["shape"]
+    w, l, h  = obj["shape"]
     x0, y0, z0 = obj["pos"]
-    _type = obj['type']
-    print(grid)
     while True:
         x, y = random.sample(range(32), 2)
-        if np.sum(grid[x:x+w, y:y+h, :]) == 0:
-
-            # print(f"type {_type} with idx {obj['name']} orginal location {obj['pos']}")
-            # print(f"New location ({x} - {x+w}, {y} - {y+h}) ")
-            # pdb.set_trace()
-            if _type == "fork1" or _type == "napkin":
-                grid[x:x+w, y:y+h, 0] = obj["name"]
-            else:
-                grid[x:x+w, y:y+h, :] = obj["name"]
-            grid[x0:x0+w, y0:y0+h, math.ceil(z0)] = 0
+        if np.sum(grid[x:x+w, y:y+l, :]) == 0:
+            grid[x0:x0+w, y0:y0+l, math.ceil(z0):math.ceil(z0)+h] = 0
+            grid[x:x+w, y:y+l, 0:h] = obj["id"]
             obj["pos"] = (x, y, 0)
             break 
             
-        elif np.sum(grid[x:x+w, y:y+h, 0]) != 0 and np.sum(grid[x:x+w, y:y+h, 1]) == 0 and (_type == "fork1" or _type == "napkin"):
+        elif np.sum(grid[x:x+w, y:y+l, 0]) == w*l and np.sum(grid[x:x+w, y:y+l, 1]) == 0 and h == 1:
             
-            # print(f"type {_type} with idx {obj['name']} orginal location {obj['pos']}")
-            # print(f"New location ({x} - {x+w}, {y} - {y+h} ")
-
-            # pdb.set_trace()
-
-            grid[x:x+w, y:y+h, 1] = obj["name"]
-            grid[x0:x0+w, y0:y0+h, math.ceil(z0)] = 0
+            grid[x0:x0+w, y0:y0+l, math.ceil(z0)] = 0
+            grid[x:x+w, y:y+l, 1] = obj["id"]
             obj["pos"] = (x, y, 0.1)
         
             break 

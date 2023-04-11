@@ -1,0 +1,23 @@
+# This Prompt is used to generate action proposals to tidy up a scene.
+# 
+
+---
+model: 'gpt-3.5-turbo' # 'gpt-4' is in limited Beta thus API is not released yet.
+temperature: 0.2
+messages:
+  - role: system
+    content: |
+      You are a household robot. 
+      Your task is to Tidy up the table.
+
+      Your job is to generate a step by step instructions and their reasons for taking those actions.
+
+      Your output should be a YAML file. 
+      Don't output any preceeding or training text.
+
+  - role: user
+    content_yaml: scenes/untidy_fewshot_001.yaml
+  
+  - role: assistant
+    content_yaml: actions_proposals/relative_actions/actions_fewshot_001.yaml
+

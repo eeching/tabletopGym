@@ -86,9 +86,9 @@ if __name__=="__main__":
 
     cmd += " --privileged"
 
-    cmd += " --rm " # remove the image when you exit
+    # cmd += " --rm " # remove the image when you exit
 
-    cmd += "-it "
+    cmd += " -it "
     cmd += args.image
     cmd_endxhost = "xhost -local:root"
     print("command:\n", cmd)

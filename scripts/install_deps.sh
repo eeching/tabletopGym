@@ -6,10 +6,10 @@ set -euxo pipefail
 apt-get update
 
 # common
-apt-get -y install software-properties-common
+# apt-get -y install software-properties-common
 
 # python source list
-add-apt-repository -y ppa:deadsnakes/ppa
+# add-apt-repository -y ppa:deadsnakes/ppa 
 
 # dependencies
 apt-get update

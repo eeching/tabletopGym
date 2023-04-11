@@ -1,4 +1,5 @@
 FROM nvidia/cudagl:11.1.1-devel-ubuntu18.04
+ENV DEBIAN_FRONTEND noninteractive
 
 ARG USER_NAME
 ARG USER_PASSWORD
@@ -23,6 +24,14 @@ RUN groupmod -g $USER_GID $USER_NAME
 WORKDIR /home/$USER_NAME
 
 # install system dependencies
+RUN apt-get update &&\
+    apt-get -y install software-properties-common &&\
+    add-apt-repository -y ppa:deadsnakes/ppa &&\
+    apt-get update &&\
+    apt-get -y install python3.8
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1 &&\
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 2 &&\
+    update-alternatives --set python3 /usr/bin/python3.8
 COPY ./scripts/install_deps.sh /tmp/install_deps.sh
 RUN yes "Y" | /tmp/install_deps.sh
 
@@ -54,7 +63,12 @@ RUN pip3 install \
     scipy\
     pybullet\
     imageio\
-    transform3d
+    transform3d\
+    pyyaml\
+    webcolors\
+    openai\
+    transforms3d\
+    gym
 RUN sudo pip3 install nvisii 
 RUN python3 -m pip install --upgrade Pillow
 RUN pip3 install -vU https://github.com/CastXML/pygccxml/archive/develop.zip pyplusplus

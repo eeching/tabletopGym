@@ -20,6 +20,10 @@ def create_single_config(base_path, num_cup1=9, num_cup2=10, num_uten=5, horizon
     with open(f'{base_path}/tidy_object.json', "w") as fp:
         json.dump(object_list, fp) 
 
+    with open(f'{base_path}/tidy_object_list.json', "w") as fp:
+        objects = list(object_list.values())
+        json.dump(objects, fp) 
+
     object_list, grid = get_untidy_config(object_list, grid)
 
     with open(f'{base_path}/untidy_grid.npy', 'wb') as f:
@@ -28,6 +32,10 @@ def create_single_config(base_path, num_cup1=9, num_cup2=10, num_uten=5, horizon
 
     with open(f'{base_path}/untidy_object.json', "w") as fp:
         json.dump(object_list, fp) 
+
+    with open(f'{base_path}/untidy_object_list.json', "w") as fp:
+        objects = list(object_list.values())
+        json.dump(objects, fp) 
 
 
 def get_untidy_config(object_list, grid):
@@ -281,7 +289,7 @@ def init_config(sim, object_list):
 
 # get_single_tidy_config(with_napkin=True)
 # single_random_walk(with_napkin=True, on_napkin=False)
-episode = "linfeng-on-napkin"
+# episode = "linfeng-on-napkin"
 # batch_tidy_config(episode="batch_init", render=True, with_napkin=False, on_napkin=False)
 # batch_random_walk(episode=episode, with_napkin=False)
 # batch_random_walk(episode=episode, with_napkin=True, on_napkin=False)

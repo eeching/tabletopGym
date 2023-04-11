@@ -1,13 +1,12 @@
 from tabletop_gym.envs.pb_env_nvisii import Tabletop_Sim
 import tabletop_gym.envs.object as obj_dict
-import os
-import table_config.object_spec as object_spec
 import pdb
 import numpy as np
-import json
 import random
 from visualize_table import init_config, create_single_config, load_single_config
 import math
+import os
+from llm_util import config_to_llmquery, get_llm_response
 
 
 class LLM_tabletopGym:
@@ -129,15 +128,25 @@ class LLM_tabletopGym:
         else:
             return False, {}, {}
 
-def test(load_existing_config=True, log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"):
 
-    if load_existing_config is False:
+log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"
+def init_tabletop_env(log_dir=None, loading=False):
+    
+    if loading is False:
         num_cup1, num_cup2, num_uten, num_napkin, horizontal, stick_to_left, with_napkin, on_napkin = 4, 0, 0, 0, True, True, True, True
         log_dir = f"./exps/llm_env/with_napkin_{with_napkin}/cup1_{num_cup1}_cup2_{num_cup2}_fork_{num_uten}_napkin_{num_napkin}_hori_{horizontal}_left_{stick_to_left}_on_napkin_{on_napkin}"
         create_single_config(log_dir, num_cup1=num_cup1, num_cup2=num_cup2, num_uten=num_uten, num_napkin=num_napkin, horizontal=horizontal, stick_to_left=stick_to_left, on_napkin=on_napkin)    
     
     object_list, grid = load_single_config(log_dir, tidy=False)
     llm_env = LLM_tabletopGym(object_list, grid, log_dir)
+
+    return llm_env, object_list, grid
+
+
+
+def test_action_parsing(log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"):
+
+    llm_env, object_list, grid = init_tabletop_env(log_dir)
 
     pdb.set_trace()
 
@@ -167,6 +176,33 @@ def test(load_existing_config=True, log_dir = "./exps/llm_env/with_napkin_True/c
     if is_valid:
         action = (id, end_pos)
     llm_env.step(action)
+
+
+def get_response_from_llm(zero_shot, action_type, base_dir):
+    # create the tabletopenv
+    # parse the object list to llm input
+    # query llm for the action proposal
+    # parse the action proposal
+    # ground the action
+    # execute the action
+
+    prompt_dir = f"prompts/action_proposal/{zero_shot}_{action_type}.yaml"
+    
+    llm_env, object_list, grid = init_tabletop_env(base_dir, loading=True)
+
+    pdb.set_trace()
+
+    llm_scene_config = config_to_llmquery(list(object_list.values()))
+
+    response = get_llm_response(prompt_dir, llm_scene_config, output_dir=f"{base_dir}/{zero_shot}_{action_type}_ap.yaml")
+
+    return response
+
+get_response_from_llm("zeroshot", "relative", log_dir)
+
+
+
+
 
 
 

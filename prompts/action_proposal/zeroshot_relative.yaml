@@ -17,4 +17,12 @@ messages:
 
       Your job is to generate a step by step instructions and their reasons for taking those actions.
 
-      Don't output any preceeding or training text. Your output should be a YAML file. 
+      Don't output any preceeding or training text. Your output should be a YAML file looks like the following:
+
+      instructions:
+      - action: Move <object> <location reference> <another objects>
+        reason: <reason>
+      - action: Move <object> <location reference> <another objects>
+        reason: <reason>
+      ...
+      

@@ -20,9 +20,9 @@ def create_single_config(base_path, num_cup1=9, num_cup2=10, num_uten=5, horizon
     with open(f'{base_path}/tidy_object.json', "w") as fp:
         json.dump(object_list, fp) 
 
-    with open(f'{base_path}/tidy_object_list.json', "w") as fp:
-        objects = list(object_list.values())
-        json.dump(objects, fp) 
+    # with open(f'{base_path}/tidy_object_list.json', "w") as fp:
+    #     objects = list(object_list.values())
+    #     json.dump(objects, fp) 
 
     object_list, grid = get_untidy_config(object_list, grid)
 
@@ -33,9 +33,9 @@ def create_single_config(base_path, num_cup1=9, num_cup2=10, num_uten=5, horizon
     with open(f'{base_path}/untidy_object.json', "w") as fp:
         json.dump(object_list, fp) 
 
-    with open(f'{base_path}/untidy_object_list.json', "w") as fp:
-        objects = list(object_list.values())
-        json.dump(objects, fp) 
+    # with open(f'{base_path}/untidy_object_list.json', "w") as fp:
+    #     objects = list(object_list.values())
+    #     json.dump(objects, fp) 
 
 
 def get_untidy_config(object_list, grid):

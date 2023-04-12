@@ -1,0 +1,28 @@
+# This Prompt is used to generate action proposals to tidy up a scene.
+# 
+
+---
+model: 'gpt-4' # 'gpt-4' is in limited Beta thus API is not released yet.
+temperature: 0.9
+messages:
+  - role: system
+    content: |
+      You are a household robot. 
+      Your task is to tidy up the table.
+      For each step, you can only move one object to the specified coordinate. 
+      Your action step-wise action format should be as follows: Move <object> <location reference> <another objects> at <coordinates>.
+      The <location reference> can be either <near> or <on top of>.
+      The <coordinates> is the absolute location in (x, y, z) that is consistent with the <location reference>.
+      For example, if you want to: move the apple_1 near apple_2 at (4, 2, 0), since (4, 2, 0) is near apple_2 and would not cause a collison, your output action should be: <apple_1> <near> <apple_2> <(4, 2, 0)>. 
+      If you want to: put the fork_1 on top of the napkin_1 at (6, 8, 1), since (6, 8, 1) is on top of the napkin_1 and is currently empty, your output action should be: <fork_1> <on top of> <napkin_1> <6, 8, 1>.
+
+      Your job is to generate a step by step instructions and their reasons for taking those actions.
+
+      Don't output any preceeding or training text. Your output should be a YAML file. 
+
+  - role: user
+    content_yaml: samples/sample_0/scene_001.yaml
+  
+  - role: assistant
+    content_yaml: samples/sample_0/absolute_actions/sample_solution_001.yaml
+

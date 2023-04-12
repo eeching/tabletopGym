@@ -4,6 +4,7 @@ import yaml
 import webcolors
 import os
 import pdb
+import re
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -88,10 +89,9 @@ def load_prompt(file_path):
     return prompt
 
 
-def get_llm_response(prompt_dir, scene=None, scene_dir=None, output_dir=None):
+def get_llm_response(prompt_dir, scene, action_type, scene_dir=None, output_dir=None):
     # Load Open API Key
     prompt = load_prompt(prompt_dir)
-    pdb.set_trace()
 
     if scene_dir is not None:
         scene = load_yaml(scene_dir)
@@ -101,7 +101,6 @@ def get_llm_response(prompt_dir, scene=None, scene_dir=None, output_dir=None):
             "content": json.dumps(scene)
         })
 
-    pdb.set_trace()
     response = openai.ChatCompletion.create(
             model = prompt["model"],
             messages = prompt["messages"],
@@ -111,7 +110,6 @@ def get_llm_response(prompt_dir, scene=None, scene_dir=None, output_dir=None):
     usage = response['usage']['total_tokens']
     action_proposal = response['choices'][0]['message']['content']
 
-    pdb.set_trace()
     action_proposal = yaml.safe_load(action_proposal)
     # Print or save response
     if output_dir is not None:
@@ -119,9 +117,47 @@ def get_llm_response(prompt_dir, scene=None, scene_dir=None, output_dir=None):
             yaml.dump(action_proposal, f)
     else:
         print(response)
-    print(f"Total Usage Tokens  {usage}")
+        print(f"Total Usage Tokens  {usage}")
 
-    return action_proposal
+    action_list = parse_response(action_type, action_proposal)
+
+    return action_list
+
+def parse_response(action_type, response):
+
+    response = response["instructions"]
+    
+    action_list = []
+    for step in response:
+        action_list.append(step["action"])
+
+    action_list = parse_action(action_type, action_list)
+
+    return action_list
+
+    
+def parse_action(action_type, action_list):
+
+    if action_type == "relative":
+        regex = r'\b(?:near|on top of|\w+_\w+_\d+)\b'
+        action_list = [re.findall(regex, action) for action in action_list]
+        action_list = [(parse_object(action[0]), action[1], parse_object(action[2])) for action in action_list]
+        
+    else:
+        regex = r'\b(?:near|on top of|\w+_\w+_\d+)\b|\(\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+\s*\)'
+        action_list = [re.findall(regex, action) for action in action_list]
+        action_list = [(parse_object(action[0]), action[1], parse_object(action[2]), tuple(map(int, action[3][1:-1].split(',')))) for action in action_list]
+
+    return action_list
+
+
+def parse_object(obj_str):
+    regex = r'(\w+)_(\w+)_(\d+)'
+    result = re.findall(regex, obj_str)[0]
+    obj = {"type": result[0], "id": int(result[2])}
+    return obj
+    
+
 
 # prompt_dir = "lang/data/prompts/action_proposal/zeroshot_absolute.yaml"
 # scene_dir = "lang/data/scenes/simple_untidy_001.yaml"

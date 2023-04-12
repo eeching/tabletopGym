@@ -1,0 +1,5 @@
+actions:
+- action: Move cup1_brown_2 near cup1_limegreen_1 at (12, 24, 0)
+  reason: To group similar objects together and free up space in the table.
+- action: Move cup1_lightskyblue_3 near cup1_silver_4 at (17, 8, 0)
+  reason: To group similar objects together and free up space in the table.

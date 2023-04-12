@@ -1,0 +1,23 @@
+instructions:
+- action: Move cup1_limegreen_1 near cup1_silver_4
+  reason: To group similar objects together and cup1_silver_4 is near the edge of the table. This leaves more easily accessible empty space on the table.
+  effect: cup1_limegreen_1 and cup1_silver_4 are together near the edge of the table.
+- action: Move cup1_brown_2 near cup1_silver_4
+  reason: To continue grouping similar objects and cup1_silver_4 is near the edge of the table. This leaves more easily accessible empty space on the table.
+  effect: cup1_limegreen_1, cup1_brown_2, and cup1_silver_4 are all together near the edge of the table.
+- action: Move cup1_lightskyblue_3 near cup1_limegreen_1
+  reason: To finish grouping all cups together and cup1_limegreen_1 is near the edge of the table. This leaves more easily accessible empty space on the table.
+  effect: cup1_limegreen_1, cup1_brown_2, cup1_lightskyblue_3, and cup1_silver_4 are all together near the edge of the table.
+High-level organization rules:
+- rule: Group the objects together based on their similarity.
+- rule: Cluster the objects to the top edges or corners of the table, so there is more easily accessible empty space on the table.
+resulting_table_state:
+- object: cup1_limegreen_1
+  position: (17, 2, 0)
+  size: (4, 4, 2)
+- object: cup1_brown_2
+  position: (13, 6, 0)
+  size: (4, 4, 2)
+- object: cup1_lightskyblue_3
+  position: (17, 6, 0)
+  size: (4, 4, 2)

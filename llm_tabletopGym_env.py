@@ -6,8 +6,10 @@ import random
 from visualize_table import init_config, create_single_config, load_single_config
 import math
 import os
-from llm_util import config_to_llmquery, get_llm_response
+from llm_utils import config_to_llmquery, get_llm_response
 
+root_dir = "./exps/llm_env/with_napkin_True"
+conf_dir = "cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"
 
 class LLM_tabletopGym:
 
@@ -128,27 +130,24 @@ class LLM_tabletopGym:
         else:
             return False, {}, {}
 
-
-log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"
-def init_tabletop_env(log_dir=None, loading=False):
+def init_tabletop_env(zero_shot, action_type, log_dir=None, loading=False):
     
     if loading is False:
-        num_cup1, num_cup2, num_uten, num_napkin, horizontal, stick_to_left, with_napkin, on_napkin = 4, 0, 0, 0, True, True, True, True
+        num_cup1, num_cup2, num_uten, num_napkin, horizontal, stick_to_left, with_napkin, on_napkin = 9, 0, 0, 0, True, True, True, True
         log_dir = f"./exps/llm_env/with_napkin_{with_napkin}/cup1_{num_cup1}_cup2_{num_cup2}_fork_{num_uten}_napkin_{num_napkin}_hori_{horizontal}_left_{stick_to_left}_on_napkin_{on_napkin}"
         create_single_config(log_dir, num_cup1=num_cup1, num_cup2=num_cup2, num_uten=num_uten, num_napkin=num_napkin, horizontal=horizontal, stick_to_left=stick_to_left, on_napkin=on_napkin)    
     
     object_list, grid = load_single_config(log_dir, tidy=False)
-    llm_env = LLM_tabletopGym(object_list, grid, log_dir)
+    llm_env = LLM_tabletopGym(object_list, grid, f"{log_dir}/{zero_shot}/{action_type}")
 
-    return llm_env, object_list, grid
+    return llm_env, object_list, grid, f"{log_dir}/{zero_shot}/{action_type}"
 
 
+def test_action_parsing():
 
-def test_action_parsing(log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"):
+    log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0_fork_0_napkin_0_hori_True_left_True_on_napkin_True"
 
     llm_env, object_list, grid = init_tabletop_env(log_dir)
-
-    pdb.set_trace()
 
     # Move 2 on the left of 1
     # action_1 = (1, (11, 2, 0))
@@ -178,27 +177,34 @@ def test_action_parsing(log_dir = "./exps/llm_env/with_napkin_True/cup1_4_cup2_0
     llm_env.step(action)
 
 
-def get_response_from_llm(zero_shot, action_type, base_dir):
-    # create the tabletopenv
-    # parse the object list to llm input
-    # query llm for the action proposal
-    # parse the action proposal
-    # ground the action
-    # execute the action
-
-    prompt_dir = f"prompts/action_proposal/{zero_shot}_{action_type}.yaml"
+def get_response_from_llm(zero_shot, action_type, object_list, output_dir=None):
     
-    llm_env, object_list, grid = init_tabletop_env(base_dir, loading=True)
+    prompt_dir = f"prompts/action_proposal/{zero_shot}_{action_type}.yaml"
+    llm_scene_config = config_to_llmquery(object_list)  
+    action_list = get_llm_response(prompt_dir, llm_scene_config, action_type, output_dir=output_dir)
 
-    pdb.set_trace()
+    return action_list
 
-    llm_scene_config = config_to_llmquery(list(object_list.values()))
+def env_execute_llm_action(zero_shot, action_type):
+    
+    llm_env, object_list, _, base_dir = init_tabletop_env(zero_shot, action_type, log_dir = f"{root_dir}/{conf_dir}", loading=False)
+    action_list = get_response_from_llm(zero_shot, action_type, list(object_list.values()), output_dir=f"{base_dir}/{zero_shot}_{action_type}_ap.yaml")
 
-    response = get_llm_response(prompt_dir, llm_scene_config, output_dir=f"{base_dir}/{zero_shot}_{action_type}_ap.yaml")
+    for action in action_list:
+        obj_1, pos, obj_2 = action
+        assert obj_1["type"] == object_list[obj_1["id"]]["type"]
+        assert obj_2["type"] == object_list[obj_2["id"]]["type"]
+        action = (obj_1["id"], pos, obj_2["id"])
 
-    return response
+        is_valid, id, end_pos = llm_env.parse_llm_action(action)
+        print(is_valid, id, end_pos)
+        if is_valid:
+            action = (id, end_pos)
+        llm_env.step(action)
 
-get_response_from_llm("zeroshot", "relative", log_dir)
+
+
+env_execute_llm_action("zeroshot", "relative")
 
 
 

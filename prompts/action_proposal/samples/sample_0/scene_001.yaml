@@ -1,0 +1,14 @@
+description_of_table: "\n        There is table divided into 32 x 32 grids.\n    \
+  \    Each object can occupy one or more grid cells.\n        The position of each\
+  \ object is represented by it's position with respect to top left corner (x,y,z)\
+  \ and it's size as length, width, and height of the grids it occupies (l,w,h)."
+objects_on_table:
+- cup1_limegreen_1
+- cup1_brown_2
+- cup1_lightskyblue_3
+- cup1_silver_4
+position_of_objects:
+- cup1_limegreen_1 at (12, 29, 0) size (4, 4, 2)
+- cup1_brown_2 at (17, 4, 0) size (4, 4, 2)
+- cup1_lightskyblue_3 at (17, 28, 0) size (4, 4, 2)
+- cup1_silver_4 at (13, 2, 0) size (4, 4, 2)
